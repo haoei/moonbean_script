@@ -10,7 +10,7 @@ import { u8aToHex } from '@polkadot/util';
 import { mnemonicToLegacySeed, hdEthereum } from '@polkadot/util-crypto';
 import * as readlineSync from 'readline-sync';
 
-const rpcUrl = 'wss://moonbeam-alpha.api.onfinality.io/public-ws'
+let rpcUrl = 'wss://moonbeam-alpha.api.onfinality.io/public-ws'
 
 function aesEncrypt(data, key) {
   const cipher = crypto.createCipher('aes192', key);
@@ -196,7 +196,13 @@ async function setKeys(sourceMem, sessionKey) {
 async function main() {
   let args = process.argv.splice(2);
   const functionName = args[0];
+  args.forEach(function(arg) {
+    let r = arg.match(/--rpcUrl=(.+)/);
+    if (r && r[1]) {
+      rpcUrl = r[1];
+    }
 
+  })
   if (functionName == 'generateAccount') {
     const walletName = readlineSync.question('Wallet Name: ');
     const password = readlineSync.question('Password: ', { hideEchoBack: true });
@@ -243,6 +249,7 @@ async function main() {
     setKeys:            send a authorMapping.setKeys transaction.
     transfer:           transfer token to another address.
     ==========================================================
+    --rpcUrl=wss://moonbeam-alpha.api.onfinality.io/public-ws
     `)
     return;
   }
