@@ -1,0 +1,22 @@
+{
+  "name": "moonbeam_script",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "moonbeam_script": "index.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@polkadot/api": "^8.11.3",
+    "bip39": "^3.0.4",
+    "readline-sync": "^1.4.10"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
