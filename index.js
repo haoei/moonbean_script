@@ -30,6 +30,16 @@ function encryptMemToFile(mnemonic, path, passwd) {
   const data = aesEncrypt(mnemonic, passwd);
   fs.writeFileSync(path, data);
 }
+// 计算私钥
+function calPrivateKey(mnemonic) {
+  const index = 0;
+  const ethDerPath = "m/44'/60'/0'/0/" + index;
+  const privateKey = u8aToHex(
+    hdEthereum(mnemonicToLegacySeed(mnemonic, '', false, 64), ethDerPath).secretKey
+  );
+  return privateKey
+}
+
 // 解密助记词
 function decryptMemByFile(path, passwd) {
   try {
@@ -40,13 +50,12 @@ function decryptMemByFile(path, passwd) {
     throw Error('decryptMemError')
   }
 }
-
-async function generateAccount(walletName, password) {
+async function generateAccount(walletName, password, mnem = null) {
 
   // Import Ethereum account from mnemonic
   const keyringECDSA = new Keyring({ type: 'ethereum' });
-  const mnemonic = bip39.generateMnemonic()
-  encryptMemToFile(mnemonic, walletName, password)
+  const mnemonic = mnem || bip39.generateMnemonic();
+  encryptMemToFile(mnemonic, walletName, password);
 
   // Define index of the derivation path and the derivation path
   const index = 0;
@@ -116,14 +125,14 @@ async function getChainStatus() {
   //   });
 }
 
-async function transfer(sourceMem, to, amount) {
+async function transfer(privateKey, to, amount) {
   const keyring = new Keyring({ type: 'ethereum' });
   // Construct API provider
   const wsProvider = new WsProvider(rpcUrl);
   const api = await ApiPromise.create({ provider: wsProvider });
 
   // Initialize wallet key pairs
-  const alice = keyring.addFromUri(sourceMem);
+  const alice = keyring.addFromUri(privateKey);
 
   // Form the transaction
   const tx = await api.tx.balances
@@ -142,14 +151,14 @@ async function transfer(sourceMem, to, amount) {
   return
 }
 
-async function joinCandidates(sourceMem, bound, candidateCount) {
+async function joinCandidates(privateKey, bound, candidateCount) {
   const keyring = new Keyring({ type: 'ethereum' });
   // Construct API provider
   const wsProvider = new WsProvider(rpcUrl);
   const api = await ApiPromise.create({ provider: wsProvider });
 
   // Initialize wallet key pairs
-  const alice = keyring.addFromUri(sourceMem);
+  const alice = keyring.addFromUri(privateKey);
 
   // Form the transaction
   const tx = await api.tx.parachainStaking
@@ -168,14 +177,14 @@ async function joinCandidates(sourceMem, bound, candidateCount) {
   return
 }
 
-async function setKeys(sourceMem, sessionKey) {
+async function setKeys(privateKey, sessionKey) {
   const keyring = new Keyring({ type: 'ethereum' });
   // Construct API provider
   const wsProvider = new WsProvider(rpcUrl);
   const api = await ApiPromise.create({ provider: wsProvider });
 
   // Initialize wallet key pairs
-  const alice = keyring.addFromUri(sourceMem);
+  const alice = keyring.addFromUri(privateKey);
 
   // Form the transaction
   const tx = await api.tx.authorMapping
@@ -206,7 +215,8 @@ async function main() {
   if (functionName == 'generateAccount') {
     const walletName = readlineSync.question('Wallet Name: ');
     const password = readlineSync.question('Password: ', { hideEchoBack: true });
-    generateAccount(walletName, password);
+    const mnem = readlineSync.question('Mnemonic(option): ', { hideEchoBack: true });
+    generateAccount(walletName, password, mnem);
   } else if (functionName == 'decryptMem') {
     const path = readlineSync.question('Wallet path: ');
     const password = readlineSync.question('Password: ', { hideEchoBack: true });
@@ -217,20 +227,23 @@ async function main() {
     const bound = readlineSync.question('bound amount: ');
     const candidateCount = readlineSync.question('candidate count: ');
     const sourceMem = decryptMemByFile(path, password);
-    joinCandidates(sourceMem, bound, candidateCount);
+    const privateKey = calPrivateKey(sourceMem)
+    joinCandidates(privateKey, bound, candidateCount);
   } else if (functionName == 'setKeys') {
     const path = readlineSync.question('Wallet path: ');
     const password = readlineSync.question('Password: ', { hideEchoBack: true });
     const sessionKey = readlineSync.question('session key: ');
     const sourceMem = decryptMemByFile(path, password);
-    setKeys(sourceMem, sessionKey)
+    const privateKey = calPrivateKey(sourceMem)
+    setKeys(privateKey, sessionKey)
   } else if (functionName == 'transfer') {
     const to = readlineSync.question('target address: ');
     const amount = readlineSync.question('amount: ');
     const path = readlineSync.question('Wallet path: ');
     const password = readlineSync.question('Password: ', { hideEchoBack: true });
     const sourceMem = decryptMemByFile(path, password);
-    transfer(sourceMem, to, amount);
+    const privateKey = calPrivateKey(sourceMem)
+    transfer(privateKey, to, amount);
   } else if (functionName == 'getChainStatus') {
     getChainStatus();
   } else if (functionName == 'getBalanceAndNonce') {
