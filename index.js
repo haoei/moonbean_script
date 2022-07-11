@@ -251,6 +251,9 @@ async function main() {
     getBalanceAndNonce(address);
   } else {
     console.log(`
+    Moonbeam_Script, Easily complete moonbeam transactions.
+    Version: v0.2.2
+
     Please input Function Name as first Args:
     ==========================================================
     getChainStatus:     getChainStatus

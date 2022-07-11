@@ -7,6 +7,10 @@
     "moonbeam_script": "index.js"
   },
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:haoei/moonbean_script.git"
+  },
   "dependencies": {
     "@polkadot/api": "^8.11.3",
     "bip39": "^3.0.4",
